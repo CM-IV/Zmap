@@ -33,7 +33,6 @@ fn main() -> Result<()> {
     }
     if open_ports.is_empty() {
         println!("{}", Colour::Green.paint("No open ports found"));
-        std::process::exit(0)
     }
 
     println!("{}", Colour::Green.paint("Done!"));
