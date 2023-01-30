@@ -3,6 +3,7 @@ use std::net::TcpStream;
 use argh::FromArgs;
 use color_eyre::eyre::Result;
 use ansi_term::Colour;
+use rayon::prelude::*;
 
 
 #[derive(FromArgs)]
@@ -22,17 +23,25 @@ fn main() -> Result<()> {
     let ip = args.ip;
 
     println!("{}", Colour::Yellow.paint("Scanning..."));
+
+    let open_ports: Vec<u16> = (1u16..65535u16)
+        .into_par_iter()
+        .filter_map(|port| {
+            let address = format!("{}:{}", &ip, port);
+            if TcpStream::connect(address.as_str()).is_ok() {
+                Some(port)
+            } else {
+                None
+            }
+        })
+        .collect();
     
-    let mut open_ports = Vec::new();
-    for port in 1..65535 {
-        let address = format!("{}:{}", ip, port);
-        if TcpStream::connect(address).is_ok() {
-            println!("Port {} is open", Colour::Red.paint(port.to_string()));
-            open_ports.push(port);
-        }
-    }
     if open_ports.is_empty() {
         println!("{}", Colour::Green.paint("No open ports found"));
+    } else {
+        for port in open_ports {
+            println!("Port {} is open", Colour::Red.paint(port.to_string()));
+        }
     }
 
     println!("{}", Colour::Green.paint("Done!"));
