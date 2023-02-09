@@ -4,6 +4,7 @@ use argh::FromArgs;
 use color_eyre::eyre::Result;
 use ansi_term::Colour;
 use rayon::prelude::*;
+use spinoff::{Spinner, spinners, Color};
 
 
 #[derive(FromArgs)]
@@ -19,10 +20,14 @@ struct Args {
 }
 
 fn main() -> Result<()> {
+    
+    color_eyre::install()?;
+
     let args: Args = argh::from_env();
     let ip = args.ip;
+    let msg = Colour::Yellow.paint("Scanning...").to_string();
 
-    println!("{}", Colour::Yellow.paint("Scanning..."));
+    let spinner = Spinner::new(spinners::Dots, msg, Color::Yellow);
 
     let open_ports: Vec<u16> = (1u16..65535u16)
         .into_par_iter()
@@ -40,11 +45,11 @@ fn main() -> Result<()> {
         println!("{}", Colour::Green.paint("No open ports found"));
     } else {
         for port in open_ports {
-            println!("Port {} is open", Colour::Red.paint(port.to_string()));
+            println!("\nPort {} is open", Colour::Red.paint(port.to_string()));
         }
     }
 
-    println!("{}", Colour::Green.paint("Done!"));
+    spinner.success("Done!");
 
     Ok(())
 }
